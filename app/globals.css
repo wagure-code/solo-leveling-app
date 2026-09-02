@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+html,
+body {
+  background-color: #04060c;
+  color: #eaf6ff;
+  min-height: 100vh;
+}
+
+/* Background ambient glow — bikin latar nggak terasa flat/kaku */
+.bg-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(56,225,255,0.10), transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(139,92,246,0.08), transparent 45%),
+    #04060c;
+}
+
+/* Bracket sudut — satu-satunya elemen tajam yang dipertahankan sebagai ciri khas */
+.hud-corner::before,
+.hud-corner::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #38e1ff;
+  opacity: 0.8;
+}
+.hud-corner::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  border-top-left-radius: 6px;
+}
+.hud-corner::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  border-bottom-right-radius: 6px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e3a5f transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #1e3a5f;
+  border-radius: 4px;
+}
