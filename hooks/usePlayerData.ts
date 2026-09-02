@@ -82,6 +82,7 @@ export function usePlayerData() {
       return;
     }
 
+    const currentUser = user;
     let cancelled = false;
 
     async function loadData() {
@@ -89,7 +90,7 @@ export function usePlayerData() {
         const { data: stateRow, error: stateError } = await supabase
           .from("player_state")
           .select("data")
-          .eq("user_id", user.id)
+          .eq("user_id", currentUser.id)
           .maybeSingle();
 
         if (stateError) throw stateError;
@@ -116,13 +117,13 @@ export function usePlayerData() {
           };
         } else {
           playerData = defaultPlayerData;
-          await supabase.from("player_state").insert({ user_id: user.id, data: defaultPlayerData });
+          await supabase.from("player_state").insert({ user_id: currentUser.id, data: defaultPlayerData });
         }
 
         const { data: questRow, error: questError } = await supabase
           .from("player_quests")
           .select("quests")
-          .eq("user_id", user.id)
+          .eq("user_id", currentUser.id)
           .maybeSingle();
 
         if (questError) throw questError;
@@ -143,7 +144,7 @@ export function usePlayerData() {
           }));
         } else {
           questsData = defaultQuests;
-          await supabase.from("player_quests").insert({ user_id: user.id, quests: defaultQuests });
+          await supabase.from("player_quests").insert({ user_id: currentUser.id, quests: defaultQuests });
         }
 
         if (!cancelled) {
@@ -166,11 +167,12 @@ export function usePlayerData() {
 
   useEffect(() => {
     if (!loaded || !user) return;
+    const currentUser = user;
     if (stateSaveTimeout.current) clearTimeout(stateSaveTimeout.current);
     stateSaveTimeout.current = setTimeout(() => {
       supabase
         .from("player_state")
-        .upsert({ user_id: user.id, data: player, updated_at: new Date().toISOString() })
+        .upsert({ user_id: currentUser.id, data: player, updated_at: new Date().toISOString() })
         .then(({ error }) => {
           if (error) console.error("Gagal menyimpan data pemain:", error);
         });
@@ -183,11 +185,12 @@ export function usePlayerData() {
 
   useEffect(() => {
     if (!loaded || !user) return;
+    const currentUser = user;
     if (questSaveTimeout.current) clearTimeout(questSaveTimeout.current);
     questSaveTimeout.current = setTimeout(() => {
       supabase
         .from("player_quests")
-        .upsert({ user_id: user.id, quests, updated_at: new Date().toISOString() })
+        .upsert({ user_id: currentUser.id, quests, updated_at: new Date().toISOString() })
         .then(({ error }) => {
           if (error) console.error("Gagal menyimpan quest:", error);
         });
