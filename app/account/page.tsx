@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePlayerData } from "@/hooks/usePlayerData";
-import { signOut } from "@/lib/authHelpers";
+import { signOut, updatePassword } from "@/lib/authHelpers";
 import { PREMIUM_PERKS } from "@/lib/premiumConfig";
 import { isSoundEnabled, setSoundEnabled } from "@/lib/soundEngine";
 import PageShell from "@/components/ui/PageShell";
@@ -35,6 +35,12 @@ export default function AccountPage() {
   const [codeInput, setCodeInput] = useState("");
   const [redeemMessage, setRedeemMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [soundOn, setSoundOn] = useState(true);
+
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState<{ text: string; ok: boolean } | null>(null);
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     setSoundOn(isSoundEnabled());
@@ -78,6 +84,32 @@ export default function AccountPage() {
   const handleLogout = async () => {
     await signOut();
     router.push("/login");
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordMessage(null);
+
+    if (newPassword.length < 6) {
+      setPasswordMessage({ text: "Password minimal 6 karakter.", ok: false });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ text: "Konfirmasi password tidak cocok.", ok: false });
+      return;
+    }
+
+    setPasswordLoading(true);
+    const { error } = await updatePassword(newPassword);
+    setPasswordLoading(false);
+
+    if (error) {
+      setPasswordMessage({ text: error.message, ok: false });
+    } else {
+      setPasswordMessage({ text: "Password berhasil diubah!", ok: true });
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setChangingPassword(false), 1500);
+    }
   };
 
   return (
@@ -199,6 +231,70 @@ export default function AccountPage() {
             >
               Redeem Kode Premium
             </button>
+          </div>
+        )}
+      </HudPanel>
+
+      <HudPanel className="p-4 sm:p-6">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-text-mid">Keamanan</p>
+          {!changingPassword && (
+            <button
+              onClick={() => {
+                setChangingPassword(true);
+                setPasswordMessage(null);
+              }}
+              className="rounded-full border border-cyan-glow/50 bg-cyan-glow/5 px-3 py-1.5 text-xs font-semibold text-cyan-glow transition hover:bg-cyan-glow/15"
+            >
+              Ubah Password
+            </button>
+          )}
+        </div>
+
+        {changingPassword && (
+          <div className="mt-3 flex flex-col gap-2">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Password baru (min. 6 karakter)"
+              className="w-full rounded-xl border border-border bg-void px-3.5 py-3 text-sm text-text-hi outline-none focus:border-cyan-glow"
+            />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleChangePassword()}
+              placeholder="Konfirmasi password baru"
+              className="w-full rounded-xl border border-border bg-void px-3.5 py-3 text-sm text-text-hi outline-none focus:border-cyan-glow"
+            />
+
+            {passwordMessage && (
+              <p className={`text-center text-xs ${passwordMessage.ok ? "text-cyan-glow" : "text-danger"}`}>
+                {passwordMessage.text}
+              </p>
+            )}
+
+            <div className="mt-1 flex gap-2">
+              <button
+                onClick={() => {
+                  setChangingPassword(false);
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setPasswordMessage(null);
+                }}
+                className="flex-1 rounded-xl border border-border/60 py-2.5 text-sm text-text-mid transition hover:border-text-mid"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleChangePassword}
+                disabled={passwordLoading}
+                className="flex-1 rounded-xl border border-cyan-glow bg-cyan-glow/10 py-2.5 text-sm font-semibold text-cyan-glow transition hover:bg-cyan-glow/20 disabled:opacity-50"
+              >
+                {passwordLoading ? "Menyimpan..." : "Simpan"}
+              </button>
+            </div>
           </div>
         )}
       </HudPanel>

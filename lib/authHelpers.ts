@@ -19,3 +19,8 @@ export async function getCurrentUser() {
   const { data } = await supabase.auth.getUser();
   return data.user;
 }
+
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  return { error };
+}
