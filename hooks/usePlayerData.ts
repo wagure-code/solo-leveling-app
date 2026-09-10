@@ -452,21 +452,37 @@ export function usePlayerData() {
   }, []);
 
   const redeemCode = useCallback(
-    (code: string): { success: boolean; message: string } => {
+    async (code: string): Promise<{ success: boolean; message: string }> => {
       const cleaned = code.trim().toUpperCase();
 
       if (!isValidRedeemCode(cleaned)) {
         return { success: false, message: "Kode tidak valid. Periksa kembali penulisannya." };
       }
 
+      if (!user) {
+        return { success: false, message: "Sesi tidak ditemukan, silakan login ulang." };
+      }
+
       if (player.redeemedCode === cleaned) {
         return { success: false, message: "Kode ini sudah pernah kamu gunakan." };
+      }
+
+      const { error } = await supabase
+        .from("redeemed_codes")
+        .insert({ code: cleaned, redeemed_by: user.id });
+
+      if (error) {
+        if (error.code === "23505") {
+          return { success: false, message: "Kode ini sudah digunakan oleh akun lain." };
+        }
+        console.error("Gagal redeem kode:", error);
+        return { success: false, message: "Terjadi kesalahan, coba lagi." };
       }
 
       setPlayer((prev) => ({ ...prev, isPremium: true, redeemedCode: cleaned }));
       return { success: true, message: "Premium berhasil diaktifkan!" };
     },
-    [player.redeemedCode]
+    [player.redeemedCode, user]
   );
 
   const resetProgress = useCallback(() => {

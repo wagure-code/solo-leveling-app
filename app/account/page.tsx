@@ -34,6 +34,7 @@ export default function AccountPage() {
   const [focusModalOpen, setFocusModalOpen] = useState(false);
   const [codeInput, setCodeInput] = useState("");
   const [redeemMessage, setRedeemMessage] = useState<{ text: string; ok: boolean } | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
 
   const [changingPassword, setChangingPassword] = useState(false);
@@ -75,10 +76,12 @@ export default function AccountPage() {
     setConfirmReset(false);
   };
 
-  const handleRedeem = () => {
-    const result = redeemCode(codeInput);
+  const handleRedeem = async () => {
+    setRedeeming(true);
+    const result = await redeemCode(codeInput);
     setRedeemMessage({ text: result.message, ok: result.success });
     if (result.success) setCodeInput("");
+    setRedeeming(false);
   };
 
   const handleLogout = async () => {
@@ -227,9 +230,10 @@ export default function AccountPage() {
             )}
             <button
               onClick={handleRedeem}
-              className="w-full rounded-xl border border-gold bg-gold/10 py-3 text-sm font-semibold text-gold transition hover:bg-gold/20 active:scale-[0.98]"
+              disabled={redeeming}
+              className="w-full rounded-xl border border-gold bg-gold/10 py-3 text-sm font-semibold text-gold transition hover:bg-gold/20 active:scale-[0.98] disabled:opacity-50"
             >
-              Redeem Kode Premium
+              {redeeming ? "Memeriksa..." : "Redeem Kode Premium"}
             </button>
           </div>
         )}
